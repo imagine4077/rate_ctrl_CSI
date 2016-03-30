@@ -37,7 +37,7 @@ static inline void payload_memcpy(uint8_t *dest, uint32_t length,
 	for (i = 0; i < length; ++i) {
 		dest[i] = payload_buffer[(offset + i) % PAYLOAD_SIZE];
 	}
-	// add seq to the payload of every packets
+//	dest[0] = count;
 	memcpy(dest,&count,sizeof(count));
 }
 
