@@ -8,6 +8,8 @@
 
 #define BUFFER_SIZE 1024
 
+char pcap_fname[] = "../data/160328-213045.pcap"; // indicate input filename
+
 typedef unsigned int u_int32;
 typedef unsigned short u_int16;
 typedef unsigned char u_int8;
@@ -24,20 +26,7 @@ struct radiotap_hdr{
 	u_int16 channel_type;
 };
 
-// ieee 80211 data
-struct ieee80211dataFlag{
-	u_int8 type; // Type/Subtype
-	u_int16 fc; // Frame Control
-	u_int16 dr; // Duration
-	char dest_mac[6]; // Destination address
-	char src_mac[6]; // Dource address
-	char bss[6]; // BSS Id
-	u_int16 fn; //Fragment number
-	// Sequence number
-	u_int32 seq; // the seq num we added in packets
-};
-
-inline void get_radiotapHeader(struct radiotap_hdr* rtap_header, u_char* pkt_data){
+void get_radiotapHeader(struct radiotap_hdr* rtap_header, u_char* pkt_data){
 	unsigned long i=0;
 	memcpy(&rtap_header->hdr_version,pkt_data,sizeof(rtap_header->hdr_version));
 	i=i+sizeof(rtap_header->hdr_version);
@@ -57,27 +46,6 @@ inline void get_radiotapHeader(struct radiotap_hdr* rtap_header, u_char* pkt_dat
 	return;
 }
 
-inline void get_80211dataFlag(struct ieee80211dataFlag* df_header, u_char* pkt_data){
-	unsigned long i=14; // skip radiotap_hdr
-	memcpy(&df_header->type, pkt_data+i,sizeof(df_header->type));
-	// i=i+sizeof(df_header->type);
-	memcpy(&df_header->fc, pkt_data+i,sizeof(df_header->fc));
-	i=i+sizeof(df_header->fc);
-	memcpy(&df_header->dr, pkt_data+i,sizeof(df_header->dr));
-	i=i+sizeof(df_header->dr);
-	memcpy(&df_header->dest_mac, pkt_data+i,sizeof(df_header->dest_mac));
-	i=i+6; //i=i+sizeof(df_header->dest_mac);
-	memcpy(&df_header->src_mac, pkt_data+i,sizeof(df_header->src_mac));
-	i=i+6; //i=i+sizeof(df_header->src_mac);
-	memcpy(&df_header->bss, pkt_data+i,sizeof(df_header->bss));
-	i=i+6; //i=i+sizeof(df_header->bss);
-	memcpy(&df_header->fn, pkt_data+i,sizeof(df_header->fn));
-	i=i+sizeof(df_header->fn);
-	// get DIY seq num
-	memcpy(&df_header->seq, pkt_data+i,sizeof(df_header->seq));
-	return;
-}
-
 int parse_pcap_file( char* fname, char* fname_out){
 	FILE *output;
 	struct pcap_pkthdr* pcap_header;
@@ -85,7 +53,6 @@ int parse_pcap_file( char* fname, char* fname_out){
 	pcap_t *pcap_handle;
 	char error_content[PCAP_ERRBUF_SIZE];
 	struct radiotap_hdr *rtap_header=(struct radiotap_hdr*)malloc(sizeof(struct radiotap_hdr));
-	struct ieee80211dataFlag *df_header=(struct ieee80211dataFlag*)malloc(sizeof(struct ieee80211dataFlag));
 	int reval,i=1;
 	char my_time[BUFFER_SIZE];
 	
@@ -105,11 +72,8 @@ int parse_pcap_file( char* fname, char* fname_out){
 		reval = pcap_next_ex(pcap_handle, &pcap_header, (const u_char **)&pkt_data);
 		get_radiotapHeader(rtap_header, pkt_data);
 		strftime(my_time, sizeof(my_time), "%Y-%m-%d %T", localtime(&(pcap_header->ts.tv_sec)));
-		get_80211dataFlag(df_header, pkt_data);
 		printf("%d: %s\n", i, my_time); //print time
 		printf("data_rate:%d  caplen:%u\n",rtap_header->data_rate,pcap_header->caplen);
-		printf("seq: %u\n",df_header->seq);
-		printf("duration: %u\n",df_header->dr);
 		i++;
 	}while(pkt_data!=NULL && reval > 0);
 	// parsing finished
@@ -117,11 +81,9 @@ int parse_pcap_file( char* fname, char* fname_out){
 	return 0;
 }
 
-int main(int argc, char* argv[]){
-	char* pcap_fname = argv[1];
-	char* output_fname = (char*)malloc(sizeof(pcap_fname)+10);
+int main(){
+	char* output_fname = (char*)malloc(sizeof(pcap_fname)+5);
 	strcpy(output_fname, pcap_fname);
 	strcat(output_fname,"._out");
-	printf("outfile: %s\n",output_fname);
 	parse_pcap_file( pcap_fname, output_fname);
 }

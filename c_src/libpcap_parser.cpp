@@ -5,6 +5,7 @@
 #include <string.h>
 #include <pcap.h>
 #include <stddef.h>
+#include <iostream>
 
 #define BUFFER_SIZE 1024
 
@@ -37,7 +38,7 @@ struct ieee80211dataFlag{
 	u_int32 seq; // the seq num we added in packets
 };
 
-inline void get_radiotapHeader(struct radiotap_hdr* rtap_header, u_char* pkt_data){
+void get_radiotapHeader(struct radiotap_hdr* rtap_header, u_char* pkt_data){
 	unsigned long i=0;
 	memcpy(&rtap_header->hdr_version,pkt_data,sizeof(rtap_header->hdr_version));
 	i=i+sizeof(rtap_header->hdr_version);
@@ -57,7 +58,7 @@ inline void get_radiotapHeader(struct radiotap_hdr* rtap_header, u_char* pkt_dat
 	return;
 }
 
-inline void get_80211dataFlag(struct ieee80211dataFlag* df_header, u_char* pkt_data){
+void get_80211dataFlag(struct ieee80211dataFlag* df_header, u_char* pkt_data){
 	unsigned long i=14; // skip radiotap_hdr
 	memcpy(&df_header->type, pkt_data+i,sizeof(df_header->type));
 	// i=i+sizeof(df_header->type);
@@ -66,19 +67,25 @@ inline void get_80211dataFlag(struct ieee80211dataFlag* df_header, u_char* pkt_d
 	memcpy(&df_header->dr, pkt_data+i,sizeof(df_header->dr));
 	i=i+sizeof(df_header->dr);
 	memcpy(&df_header->dest_mac, pkt_data+i,sizeof(df_header->dest_mac));
-	i=i+6; //i=i+sizeof(df_header->dest_mac);
+	i=i+sizeof(df_header->dest_mac);
 	memcpy(&df_header->src_mac, pkt_data+i,sizeof(df_header->src_mac));
-	i=i+6; //i=i+sizeof(df_header->src_mac);
+	i=i+sizeof(df_header->src_mac);
 	memcpy(&df_header->bss, pkt_data+i,sizeof(df_header->bss));
-	i=i+6; //i=i+sizeof(df_header->bss);
+	i=i+sizeof(df_header->bss);
 	memcpy(&df_header->fn, pkt_data+i,sizeof(df_header->fn));
 	i=i+sizeof(df_header->fn);
 	// get DIY seq num
-	memcpy(&df_header->seq, pkt_data+i,sizeof(df_header->seq));
+	memcpy(&df_header->seq, pkt_data+i, sizeof(df_header->seq));
+
 	return;
 }
 
 int parse_pcap_file( char* fname, char* fname_out){
+	using std::cout;
+	using std::hex;
+	using std::dec;
+	using std::endl;
+
 	FILE *output;
 	struct pcap_pkthdr* pcap_header;
 	u_char *pkt_data;
@@ -109,7 +116,7 @@ int parse_pcap_file( char* fname, char* fname_out){
 		printf("%d: %s\n", i, my_time); //print time
 		printf("data_rate:%d  caplen:%u\n",rtap_header->data_rate,pcap_header->caplen);
 		printf("seq: %u\n",df_header->seq);
-		printf("duration: %u\n",df_header->dr);
+//		cout << "dest_mac: "<< hex << df_header->dest_mac << endl;
 		i++;
 	}while(pkt_data!=NULL && reval > 0);
 	// parsing finished
@@ -122,6 +129,5 @@ int main(int argc, char* argv[]){
 	char* output_fname = (char*)malloc(sizeof(pcap_fname)+10);
 	strcpy(output_fname, pcap_fname);
 	strcat(output_fname,"._out");
-	printf("outfile: %s\n",output_fname);
 	parse_pcap_file( pcap_fname, output_fname);
 }
