@@ -118,6 +118,10 @@ int parse_pcap_file( char* fname, char* fname_out){
 }
 
 int main(int argc, char* argv[]){
+	if(argc!=2){
+		printf("wrong argument\n");
+		exit(1);
+	}
 	char* pcap_fname = argv[1];
 	char* output_fname = (char*)malloc(sizeof(pcap_fname)+10);
 	strcpy(output_fname, pcap_fname);
