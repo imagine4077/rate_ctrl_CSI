@@ -51,7 +51,7 @@ inline void get_80211dataFlag(struct ieee80211dataFlag* df_header, u_char* pkt_d
 	return;
 }
 
-int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector, unsigned int start_seq){
+int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector){
 	struct pcap_pkthdr* pcap_header; // the header of a packet which is added by tcpdump
 	u_char *pkt_data; // the packet entity which is consisted of radiotap_hdr, ieee80211dataFlag header and data frame
 	pcap_t *pcap_handle;
@@ -68,13 +68,6 @@ int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector
 	u_int32 cyc_queue_buffer[buffer_len],byte_sum =0,i=0;
 	bool queue_empty=true;
 	
-	//open data dump file
-	char out[128];
-	strcpy(out,fname);
-	strcat(out,".dat");
-	printf("%s\n",out);
-	FILE *out_fp = fopen(out, "w");
-	
 	// start parsing
 	pcap_handle=pcap_open_offline(fname,error_content);
 	if(!pcap_handle)
@@ -83,38 +76,29 @@ int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector
 		exit(1);
 	}
 	// start parsing every packet
-	reval = pcap_next_ex(pcap_handle, &pcap_header, (const u_char **)&pkt_data);
-	while(pkt_data!=NULL && reval > 0){
+	do{
+		reval = pcap_next_ex(pcap_handle, &pcap_header, (const u_char **)&pkt_data);
 		get_radiotapHeader(rtap_header, pkt_data);
-		get_80211dataFlag(df_header, pkt_data);
-		ts=pcap_header->ts.tv_sec+ pcap_header->ts.tv_usec/1000000.0;
-		u_int32 tmp_seq = df_header->seq; // seq of this packet
+		
 		strftime(my_time, sizeof(my_time), "%Y-%m-%d %T", localtime(&(pcap_header->ts.tv_sec)));
-		printf("%d: %s,\t%f\n", i, my_time,ts); //print time // de
+		ts=pcap_header->ts.tv_sec+ pcap_header->ts.tv_usec/1000000.0;
+		get_80211dataFlag(df_header, pkt_data);
+		u_int32 tmp_seq = df_header->seq; // seq of this packet
+		printf("%d: %s\n", i, my_time); //print time // de
+		printf("data_rate:%d  caplen:%u\n",rtap_header->data_rate,pcap_header->caplen); // de
+		printf("seq: %u\n",df_header->seq); // de
+		printf("duration: %u\n",df_header->dr); // de
 
 		/** judge if the dest/src mac addr is right **/
-		if(!(!memcmp(df_header->dest_mac,"\x00\x16\xea\x12\x34\x56",6)
-		||!memcmp(df_header->bss,"\x00\x16\xea\x12\x34\x56",6)
-		||!memcmp(df_header->src_mac,"\x00\x16\xea\x12\x34\x56",6))){
-			reval = pcap_next_ex(pcap_handle, &pcap_header, (const u_char **)&pkt_data);
-			continue;
-		}
-		if(0==i&&( (start_seq>0&&tmp_seq==start_seq)||start_seq==0 )){
+		if(0==i){
 			memcpy(dest_mac,df_header->dest_mac,6);
 			memcpy(src_mac,df_header->src_mac,6);
 		}
 		else if(0!=memcmp(dest_mac,df_header->dest_mac,6)
 				&&0!=memcmp(src_mac,df_header->src_mac,6)){
-			printf("MAC uneual in %u\n",i);
-			reval = pcap_next_ex(pcap_handle, &pcap_header, (const u_char **)&pkt_data);
+			printf("MAC uneual in %u",i);
 			continue;
 		}
-		
-		
-		printf("data_rate:%d  caplen:%u\n",rtap_header->data_rate,pcap_header->caplen); // de
-		printf("seq: %u\n",df_header->seq); // de
-		printf("duration: %u\n",df_header->dr); // de
-		
 		/** if queue is empty **/
 		if(queue_empty){
 			i=0;
@@ -135,10 +119,9 @@ int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector
 			}
 			/** if the interval more than 1s **/
 			else if( ts-first_ts>1 ){
-				struct loss_and_thrpt tmp = {i+1,byte_sum*8/(float)1048576.0};
+				struct loss_and_thrpt tmp = {i+1,byte_sum/(float)1048576.0};
 				res_vector.push_back(tmp);
-				printf("pkt_num: %u\tthroughput:%fMbps\n",tmp.pkt_num,tmp.thrpt);
-				fprintf(out_fp,"%u,%fMbps\n",tmp.pkt_num,tmp.thrpt);
+				printf("pkt_num: %u\tthroughput:%f",tmp.pkt_num,tmp.thrpt);
 				cyc_queue_buffer[0]= tmp_seq;
 				first_ts = ts;
 				byte_sum = pcap_header->len-38;
@@ -146,16 +129,13 @@ int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector
 			}
 		}
 		i++;
-		reval = pcap_next_ex(pcap_handle, &pcap_header, (const u_char **)&pkt_data);
-	}
+	}while(pkt_data!=NULL && reval > 0);
 	// parsing finished
 	/** the last packet may not fullfill 1second interval **/
 	struct loss_and_thrpt tmp = {i,byte_sum/(ts-first_ts)/(float)1048576.0};
 	res_vector.push_back(tmp);
-	printf("pkt_num fi: %u\tthroughput:%fMbps\n",tmp.pkt_num,tmp.thrpt);
-	fprintf(out_fp,"%u,%fMbps\n",tmp.pkt_num,tmp.thrpt);
+	printf("pkt_num: %u\tthroughput:%f",tmp.pkt_num,tmp.thrpt);
 	
-	fclose( out_fp);
 	return 0;
 }
 

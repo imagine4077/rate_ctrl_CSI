@@ -44,7 +44,7 @@ struct loss_and_thrpt{
 	float thrpt;
 };
 
-int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector,unsigned int start_seq=0);
+int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector);
 inline void get_radiotapHeader(struct radiotap_hdr* rtap_header, u_char* pkt_data);
 inline void get_80211dataFlag(struct ieee80211dataFlag* df_header, u_char* pkt_data);
 inline bool buffer_hasEle(const u_int32 arr[],const u_int32 len, u_int32 x);
