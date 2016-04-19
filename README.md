@@ -6,7 +6,7 @@
 
 1. 发送端(PC1)运行 setup_injection.sh 64 HT20 0x4101 (0x4101为MCS速率设置,可根据[CSITOOLS FAQ](http://dhalperi.github.io/linux-80211n-csitool/faq.html)中相关说明设置) 
 2. AP(PC2)运行 setup_monitor_csi.sh 64 HT20
-3. AP(PC2)运行 ap.sh, 发送端连接至ssid：csitool
+3. AP(PC2)运行 ap.sh, 发送端(PC1)连接至ssid：csitool
 4. 发送端(PC1)运行编译好的random_packets, 参数格式为:
 
 ```./random_packets <number> <packetLength> <mode: 0=my MAC, 1=injection MAC> <delay in us>```
