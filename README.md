@@ -9,7 +9,7 @@
 3. AP(PC2)运行 ap.sh, 发送端连接至ssid：csitool
 4. 发送端(PC1)运行编译好的random_packets, 参数格式为:
 
-	./random_packets <number> <packetLength> <mode: 0=my MAC, 1=injection MAC> <delay in us>	
+```./random_packets <number> <packetLength> <mode: 0=my MAC, 1=injection MAC> <delay in us>```
 
 5. 接收端(PC3)运行 setup_injection.sh 64 HT20, 然后连接至AP. 打开wireshark监听mon0即可收到所发的packet.
 
