@@ -51,7 +51,7 @@ inline void get_80211dataFlag(struct ieee80211dataFlag* df_header, u_char* pkt_d
 	return;
 }
 
-int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector, unsigned int start_seq){
+int parse_pcap_file( const char* fname, std::vector<struct loss_and_thrpt>& res_vector, unsigned int start_seq){
 	struct pcap_pkthdr* pcap_header; // the header of a packet which is added by tcpdump
 	u_char *pkt_data; // the packet entity which is consisted of radiotap_hdr, ieee80211dataFlag header and data frame
 	pcap_t *pcap_handle;
@@ -71,7 +71,7 @@ int parse_pcap_file( char* fname, std::vector<struct loss_and_thrpt>& res_vector
 	//open data dump file
 	char out[128];
 	strcpy(out,fname);
-	strcat(out,".dat");
+	strcat(out,".thpt");
 	printf("%s\n",out);
 	FILE *out_fp = fopen(out, "w");
 	

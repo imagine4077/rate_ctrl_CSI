@@ -12,12 +12,12 @@ int main(int argc, char* argv[]){
 	using std::cout;
 	using std::endl;
 
-	if(argc < 2){
-		printf("wrong argument\n");
+	if(argc < 4){
+		printf("wrong argument. FORMAT:\n./main [pcap_fname] [freopen] [start_seq]");
 		exit(1);
 	}
 	char* pcap_fname = argv[1];
-	char* output_fname = (char*)malloc(sizeof(pcap_fname)+10);
+	char* output_fname = (char*)malloc(strlen(pcap_fname)+10);
 	static std::vector<struct loss_and_thrpt> res_vector;
 	strcpy(output_fname, pcap_fname);
 	strcat(output_fname,"._out");
@@ -28,8 +28,6 @@ int main(int argc, char* argv[]){
 	start_seq = atoi(argv[3]);
 
 	parse_pcap_file( pcap_fname, res_vector, start_seq);
-	print_vector( res_vector);
-	res_vector.clear();
 	return 0;
 }
 
