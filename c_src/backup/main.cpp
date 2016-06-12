@@ -35,5 +35,5 @@ inline void print_vector(const std::vector<struct loss_and_thrpt> vec){
 	unsigned int i=0;
 	using namespace std;
 	for(;i<vec.size();i++)
-		printf("pkt_num fi: %f\tthroughput:%fMbps\n",vec[i].pkt_num,vec[i].thrpt);
+		printf("pkt_num fi: %u\tthroughput:%fMbps\n",vec[i].pkt_num,vec[i].thrpt);
 }

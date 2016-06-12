@@ -11,7 +11,7 @@ echo ${time}
 sudo /home/wifitest/linux-80211n-csitool-supplementary/netlink/log_to_file ./${time}/csi.dat &
 iperf -s -i 1 -u| tee ./${time}/iperf.txt &
 # sudo ./_clock.sh &
-sleep 30
+sleep 35
 sudo killall iperf
 while [ $? -ne 0 ]
 do

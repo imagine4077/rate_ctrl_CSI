@@ -40,7 +40,7 @@ struct ieee80211dataFlag{
 };
 
 struct loss_and_thrpt{
-	float pkt_num;
+	u_int32 pkt_num;
 	float thrpt;
 };
 

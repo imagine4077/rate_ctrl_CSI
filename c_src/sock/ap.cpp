@@ -58,7 +58,7 @@ class AP{
 		void one_round(){
 			if(send_flag(start_msg)){
 		//	send_flag(start_msg);
-				sleep(1);
+				sleep(2);
 				std::string output = exec(cmd.c_str());
 				std::cout << output << std::endl;
 			}
