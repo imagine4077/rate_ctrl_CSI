@@ -9,7 +9,6 @@
 #include <deque>
 #include <cstddef>
 #include <vector>
-#include <stdint.h>
 
 inline void get_radiotapHeader(struct radiotap_hdr* rtap_header, u_char* pkt_data){
 	unsigned long i=0;
@@ -61,8 +60,6 @@ int parse_pcap_file( const char* fname, std::vector<struct loss_and_thrpt>& res_
 	struct ieee80211dataFlag *df_header=(struct ieee80211dataFlag*)malloc(sizeof(struct ieee80211dataFlag));
 	int reval,pkt_loss=0;
 	char my_time[BUFFER_SIZE];
-	const uint64_t filter = 0xffffffff; // 0xff ff ff ff
-	uint64_t first_stamp;
 	
 	double first_ts=0.0,ts,real_first;
 //	u_int8 dest_mac[6];
@@ -100,7 +97,6 @@ int parse_pcap_file( const char* fname, std::vector<struct loss_and_thrpt>& res_
 		u_int32 tmp_seq = df_header->seq; // seq of this packet
 		strftime(my_time, sizeof(my_time), "%Y-%m-%d %T", localtime(&(pcap_header->ts.tv_sec)));
 		printf("%d: %s,\t%f\n", i, my_time,ts); //print time // de
-		uint64_t tmp_t = (filter & ((filter & pcap_header->ts.tv_sec)*1000000))+pcap_header->ts.tv_usec;
 		if(i==0) real_first=ts;
 		if(ts-real_first<=1)
 			fprintf(ts_fp,"%ld\n",pcap_header->ts.tv_usec);
@@ -133,7 +129,6 @@ int parse_pcap_file( const char* fname, std::vector<struct loss_and_thrpt>& res_
 			i=0;
 			cyc_queue_buffer[0]= tmp_seq;
 			first_ts = ts;
-			first_stamp = tmp_t;
 			first_seq = tmp_seq;
 			byte_sum =pcap_header->len;
 			queue_empty=false;
@@ -160,10 +155,9 @@ int parse_pcap_file( const char* fname, std::vector<struct loss_and_thrpt>& res_
 				res_vector.push_back(tmp);
 				printf("pkt_num: %f\tthroughput:%fMbps\n",tmp.pkt_num,tmp.thrpt);
 				printf("i:%d,\tall:%d,\tloss:%d\n",i,tmp_seq-first_seq+1,pkt_loss);
-				fprintf(out_fp,"%f,%fMbps,%lu\n",tmp.pkt_num,tmp.thrpt,first_stamp);
+				fprintf(out_fp,"%f,%fMbps\n",tmp.pkt_num,tmp.thrpt);
 				cyc_queue_buffer[0]= tmp_seq;
 				first_ts = ts;
-				first_stamp = tmp_t;
 				first_seq= tmp_seq;
 				byte_sum = pcap_header->len;
 				i = 0;
@@ -178,10 +172,10 @@ int parse_pcap_file( const char* fname, std::vector<struct loss_and_thrpt>& res_
 	}
 	// parsing finished
 	/** the last packet may not fullfill 1second interval **/
-	//struct loss_and_thrpt tmp = {(i+1.0)/(1.0+cyc_queue_buffer[i%buffer_len]-first_seq),byte_sum*8/(ts-first_ts)/(float)1048576.0};
-	//res_vector.push_back(tmp);
-	//printf("pkt_num fi: %f\tthroughput:%fMbps\n",tmp.pkt_num,tmp.thrpt);
-	//fprintf(out_fp,"%f,%fMbps\n",tmp.pkt_num,tmp.thrpt);
+	struct loss_and_thrpt tmp = {(i+1.0)/(1.0+cyc_queue_buffer[i%buffer_len]-first_seq),byte_sum*8/(ts-first_ts)/(float)1048576.0};
+	res_vector.push_back(tmp);
+	printf("pkt_num fi: %f\tthroughput:%fMbps\n",tmp.pkt_num,tmp.thrpt);
+	fprintf(out_fp,"%f,%fMbps\n",tmp.pkt_num,tmp.thrpt);
 	
 	fclose( out_fp);
 	return 0;
