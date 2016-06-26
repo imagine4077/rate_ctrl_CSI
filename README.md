@@ -1,5 +1,7 @@
 ﻿#### 数据收集方式
 
+看这个帖子:[https://github.com/dhalperi/linux-80211n-csitool-supplementary/issues/88](https://github.com/dhalperi/linux-80211n-csitool-supplementary/issues/88)
+
 * 所需设备：5300网卡PC × 2
 
 收集方式：
