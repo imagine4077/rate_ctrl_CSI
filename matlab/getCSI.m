@@ -1,6 +1,7 @@
 function [ x, y ] = getCSI( file, tx, rx, sc) %, draw)
     csi_trace = read_bf_file(file);
     csi_trace = del_null(csi_trace);
+    save(strcat(file,'_rawCSI.mat'),'csi_trace');
     x = get_time(csi_trace);
     y = get_csi(csi_trace, tx, rx, sc);
     y = slide_window(y,50);

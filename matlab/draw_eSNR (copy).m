@@ -1,19 +1,24 @@
-function [ time, eSNR ] = draw_eSNR( file, mode, module )
-% module -> col, mode(antanna mode) -> row
+function [ time, eSNR ] = draw_eSNR( file, module )
+%UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     csi_trace = read_bf_file(file);
     csi_trace = del_null(csi_trace);
     x = get_time(csi_trace);
-    y = get_eSNR(csi_trace,module,mode);
+    y = get_eSNR(csi_trace,module);
     %
-    y = slide_window(y,50);
-        figure
-        plot(x,y,'-r');
+    %y = slide_window(y,50);
+%     if( draw ==1)
+%         figure
+%         plot(x,y,'-r');
+%     end
+    if(module==1) ber=normcdf(sqrt(y.*2)); end
+    if(module==2) ber=normcdf(sqrt(y)); end
+    if(module==3) ber=3/4*normcdf(sqrt(y./5)); end
+    if(module==4) ber=7/12*normcdf(sqrt(y./21)); end
+    figure;plot(x,ber,'r-');
     time = x;
     eSNR = y;
-    eSNR_data.time=x;
-    eSNR_data.esnr = y;
-    save(strcat(file,'_eSNR.mat'),'eSNR_data');
+    save(strcat(file,'_eSNR.mat'),'eSNR');
 end
 
 
@@ -37,7 +42,7 @@ function [ vec ] = get_csi( csi_trace, tx, rx, sc )
     end 
 end
 
-function [ eSNR] = get_eSNR( csi_trace ,module,mode)
+function [ eSNR] = get_eSNR( csi_trace ,module)
 %     eSNR = zeros( size( csi_trace));
     eSNR = [];
     len=length( csi_trace);
@@ -45,9 +50,7 @@ function [ eSNR] = get_eSNR( csi_trace ,module,mode)
         fprintf('%d/%d:\n',i,len);
 %        eSNR = [ eSNR; get_eff_SNRs(csi_trace{i}.csi)];
        tmp = get_eff_SNRs(csi_trace{i}.csi);
-       tmp = db(tmp, 'pow'); %new
-       tmp
-       eSNR = [ eSNR; tmp(mode,module)];
+       eSNR = [ eSNR; tmp(1,module)];
 %        pause
     end
 end
