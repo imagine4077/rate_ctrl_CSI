@@ -11,7 +11,7 @@
 3. PC1和PC2需置于同一channel
 3. 发送端(PC1)运行编译好的random_packets, 参数格式为:
 
-```./random_packets <number> <packetLength> <mode: 0=my MAC, 1=injection MAC> <delay in us>```
+  ```./random_packets <number> <packetLength> <mode: 0=my MAC, 1=injection MAC> <delay in us>```
 
 4. 接收端(PC2)打开wireshark监听mon0即可收到所发的packet.
 
